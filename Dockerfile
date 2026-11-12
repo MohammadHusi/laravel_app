@@ -1,36 +1,58 @@
-# 1. Gunakan base image resmi PHP 8.2 dengan Apache
+# Multi-stage build: 1. Build assets frontend (Vite)
+FROM node:20-alpine AS node_builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# Stage 2: Production PHP + Apache
 FROM php:8.2-apache
 
-# 2. Install dependensi sistem yang dibutuhkan oleh Laravel & Composer
-RUN apt-get update && apt-get install -y \
+# Install ekstensi sistem yang dibutuhkan
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
-    unzip
+    unzip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 3. Install ekstensi PHP yang wajib untuk database MySQL dan fitur Laravel
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# 4. Install Composer secara global
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 5. Tentukan direktori kerja di dalam container
+# Set working directory
 WORKDIR /var/www/html
 
-# 6. Salin semua file project ke dalam container
+# Salin source code project
 COPY . /var/www/html
 
-# 7. Ubah DocumentRoot Apache agar mengarah ke folder public Laravel
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Salin aset frontend yang sudah di-compile dari builder Vite
+COPY --from=node_builder /app/public/build /var/www/html/public/build
 
-# 8. Aktifkan modul mod_rewrite Apache untuk routing Laravel
-RUN a2enmod rewrite
+# Install dependensi PHP tanpa dev dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# 9. Berikan izin akses (permissions) untuk folder storage dan bootstrap cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Konfigurasi Apache DocumentRoot ke folder public Laravel dan izinkan .htaccess (AllowOverride All)
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
+    && printf "<Directory /var/www/html/public>\n    AllowOverride All\n    Require all granted\n</Directory>\n" >> /etc/apache2/apache2.conf \
+    && a2enmod rewrite
 
-# 10. Buka port 80 untuk akses web
+# Buat entrypoint script agar saat container jalan otomatis jalankan optimasi / migrasi
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Atur permissions Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 EXPOSE 80
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
