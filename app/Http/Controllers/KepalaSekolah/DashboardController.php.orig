@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Controllers\KepalaSekolah;
+
+use App\Http\Controllers\Controller;
+use App\Models\Attendance;
+use App\Models\SchoolClass;
+use App\Models\Student;
+use App\Models\Teacher;
+use Illuminate\Support\Carbon;
+use Illuminate\View\View;
+
+class DashboardController extends Controller
+{
+    public function __invoke(): View
+    {
+        $statuses = Attendance::whereDate('tanggal', today())
+            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+        $start = Carbon::now()->startOfMonth()->subMonths(5);
+        $records = Attendance::whereBetween('tanggal', [$start->toDateString(), today()->toDateString()])
+            ->selectRaw("DATE_FORMAT(tanggal, '%Y-%m') as month, status, count(*) as total")
+            ->groupBy('month', 'status')->get();
+        $monthly = collect(range(0, 5))->map(function ($offset) use ($start, $records) {
+            $month = $start->copy()->addMonths($offset);
+            $row = ['label' => $month->translatedFormat('M'), 'hadir' => 0, 'izin' => 0, 'sakit' => 0, 'alpa' => 0];
+            foreach ($records->where('month', $month->format('Y-m')) as $record) {
+                $row[$record->status] = (int) $record->total;
+            }
+
+            return $row;
+        });
+
+        return view('dashboards.kepala-sekolah', [
+            'students' => Student::count(),
+            'teachers' => Teacher::count(),
+            'classes' => SchoolClass::count(),
+            'todayByStatus' => collect(['hadir', 'izin', 'sakit', 'alpa'])
+                ->mapWithKeys(fn ($status) => [$status => (int) ($statuses[$status] ?? 0)])->all(),
+            'monthly' => $monthly->all(),
+        ]);
+    }
+}

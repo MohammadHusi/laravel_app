@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Masuk | Sistem Absensi SMK Mawaddah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+        *{letter-spacing:0}body{min-height:100vh;margin:0;background:#f1f5f5;color:#18334b;font-family:'DM Sans',sans-serif;display:grid;grid-template-columns:minmax(300px,1fr) minmax(380px,510px)}.school-panel{background:#0f3d2c;color:#fff;position:relative;overflow:hidden;padding:clamp(32px,7vw,100px);display:flex;flex-direction:column;justify-content:flex-start;min-height:100vh}.school-panel:before{content:'';position:absolute;width:510px;height:510px;border:1px solid #ffffff20;border-radius:50%;right:-230px;bottom:-180px;box-shadow:0 0 0 42px #ffffff08,0 0 0 85px #ffffff06}.school-panel:after{content:'';position:absolute;left:10%;top:38%;width:140px;height:140px;background:#8dd1bd;border-radius:32px;transform:rotate(18deg);opacity:.13}.mark{height:140px;width:140px;display:grid;place-items:center;background:transparent;border-radius:0;overflow:visible}.mark img{width:136px;height:136px;object-fit:contain}.school-heading{position:relative;z-index:1;max-width:520px;margin:6px 0 0}.school-heading .kicker{color:#b8e4d8;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:20px}.school-heading h1{font:800 clamp(34px,4vw,54px)/1.1 'Manrope',sans-serif;margin:110px 0 20px}.school-heading p{color:#c1d1dc;font-size:16px;line-height:1.7;max-width:420px}.school-footer{position:relative;z-index:1;color:#9eb3c2;font-size:12px;margin-top:auto}.login-panel{display:flex;align-items:center;justify-content:center;padding:42px;background:#fff}.login-box{width:100%;max-width:365px}.login-box .mini-mark{width:46px;height:46px;border-radius:12px;background:#e4f3ee;color:#176b61;display:grid;place-items:center;font-size:19px;margin-bottom:28px}.login-box h2{font:800 26px 'Manrope',sans-serif;margin:0 0 8px}.login-box p{color:#788997;margin:0 0 30px}.form-label{font-size:12px;font-weight:700}.form-control{min-height:48px;border-color:#dce5e9;border-radius:8px}.form-control:focus{border-color:#1a8f4c;box-shadow:0 0 0 .2rem #1a8f4c18}.btn-enter{min-height:48px;background:#1a8f4c;color:#fff;font-weight:700;border-radius:8px}.btn-enter:hover{background:#136b39;color:#fff}.input-wrap{position:relative}.input-wrap i{position:absolute;top:16px;left:14px;color:#8597a3}.input-wrap .form-control{padding-left:41px}.login-help{font-size:11px;color:#8998a2;margin-top:26px;text-align:center}
+        @media(max-width:760px){body{display:block;background:#fff}.school-panel{min-height:unset;padding:25px 22px 24px}.school-panel .school-heading{margin:35px 0 22px}.school-heading h1{font-size:30px;margin:20px 0 9px}.school-heading p{display:none}.school-footer{display:none}.school-panel:before{width:250px;height:250px;right:-130px;bottom:-145px}.school-panel:after{width:72px;height:72px;left:auto;right:28%;top:42%}.login-panel{padding:36px 22px;align-items:flex-start}.login-box{max-width:460px;margin:auto}.login-box .mini-mark{display:none}.login-box p{margin-bottom:22px}}
+    </style>
+</head>
+<body>
+    <section class="school-panel"><div class="mark"><img src="{{ asset('logo.png') }}" alt="Logo SMK Mawaddah"></div><div class="school-heading"><div class="kicker">SMK Mawaddah Palengaan</div><h1>Sistem Informasi Absensi</h1><p>Presensi belajar yang terdata rapi, agar sekolah selalu tahu perkembangan kehadiran setiap murid.</p></div><div class="school-footer">© {{ date('Y') }} SMK Mawaddah Palengaan</div></section>
+    <main class="login-panel"><div class="login-box"><div class="mini-mark"><i class="fa-solid fa-arrow-right-to-bracket"></i></div><h2>Selamat datang</h2><p>Masuk menggunakan akun sekolah Anda.</p>
+        @if($errors->any())<div class="alert alert-danger py-2">{{ $errors->first() }}</div>@endif
+        <form method="POST" action="{{ route('login.store') }}">@csrf
+            <div class="mb-3"><label class="form-label" for="login">Username</label><div class="input-wrap"><i class="fa-regular fa-user"></i><input class="form-control" id="login" name="login" value="{{ old('login') }}" autocomplete="username" required autofocus placeholder="Masukkan username"></div></div>
+            <div class="mb-3"><label class="form-label" for="password">Password</label><div class="input-wrap"><i class="fa-solid fa-lock"></i><input class="form-control" id="password" type="password" name="password" autocomplete="current-password" required placeholder="Masukkan password"></div></div>
+            <div class="form-check mb-4"><input class="form-check-input" id="remember" type="checkbox" name="remember" value="1"><label class="form-check-label small" for="remember">Ingat saya</label></div>
+            <button class="btn btn-enter w-100" type="submit">Masuk <i class="fa-solid fa-arrow-right ms-2"></i></button>
+        </form><div class="login-help">Akses hanya untuk pengguna terdaftar di SMK Mawaddah.</div>
+    </div></main>
+</body>
+</html>
